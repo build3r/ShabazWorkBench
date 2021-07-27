@@ -2,7 +2,6 @@ package com.builder.shabazworkbench
 
 import android.os.Bundle
 import android.util.Log
-import androidx.preference.PreferenceManager
 import com.google.android.material.snackbar.Snackbar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
@@ -11,11 +10,12 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import android.view.Menu
 import android.view.MenuItem
+import androidx.lifecycle.lifecycleScope
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.builder.shabazworkbench.databinding.ActivityMainBinding
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import timber.log.Timber
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -36,6 +36,18 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
+
+        Timber.d("before Coroutine ${Thread.currentThread().name}")
+        lifecycleScope.launch {
+            Timber.d("launch Coroutine ${Thread.currentThread().name}")
+            async {  test1("1") }
+            async {  test1("2") }
+            async {  test1("3") }
+            Timber.d("After test1 ${Thread.currentThread().name}")
+            test2()
+            Timber.d("After test2 ${Thread.currentThread().name}")
+        }
+        Timber.d("After Coroutine ${Thread.currentThread().name}")
 
         binding.fab.setOnClickListener { view ->
             run {
@@ -69,6 +81,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private suspend fun test2() = withContext(Dispatchers.Default) {
+        Timber.d("test2 ${Thread.currentThread().name}")
+        Thread.sleep(5000)
+        Timber.d("test2 Returning ${Thread.currentThread().name}")
+
+    }
+
+    private suspend fun test1(s: String) = withContext(Dispatchers.IO) {
+        Timber.d("test1 call #$s on ${Thread.currentThread().name}")
+        delay(3000)
+        Timber.d("test1 Returning #$s on ${Thread.currentThread().name}")
+
+    }
 
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
