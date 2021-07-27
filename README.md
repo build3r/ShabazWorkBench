@@ -5,3 +5,4 @@ A repo to experiment on android features and libraries
 2. 27/07/2021 03:25:08 PM - Understanding Coroutine dispatchers 
     1. IO and Default dispatchers use the same threads
     2. The parallelism for IO is Default is 64 (depends on num of cores too) 
+    3. Coroutines with custom dispatches

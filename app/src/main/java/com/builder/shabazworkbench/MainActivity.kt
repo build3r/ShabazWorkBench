@@ -16,6 +16,9 @@ import androidx.security.crypto.MasterKey
 import com.builder.shabazworkbench.databinding.ActivityMainBinding
 import kotlinx.coroutines.*
 import timber.log.Timber
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
+import java.util.concurrent.ThreadPoolExecutor
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -24,6 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
 
+    val cThread = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
     @ExperimentalTime
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,10 +44,12 @@ class MainActivity : AppCompatActivity() {
         Timber.d("before Coroutine ${Thread.currentThread().name}")
         lifecycleScope.launch {
             Timber.d("launch Coroutine ${Thread.currentThread().name}")
-            async {  test1("1") }
-            async {  test1("2") }
-            async {  test1("3") }
-            Timber.d("After test1 ${Thread.currentThread().name}")
+            async (cThread) {     test1("1") }
+
+            Timber.d("After test1 at 1 ${Thread.currentThread().name}")
+            async(cThread) {  test1("2") }
+            Timber.d("After test1 at 2 ${Thread.currentThread().name}")
+
             test2()
             Timber.d("After test2 ${Thread.currentThread().name}")
         }
@@ -88,8 +94,10 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private suspend fun test1(s: String) = withContext(Dispatchers.IO) {
+    private suspend fun test1(s: String){
         Timber.d("test1 call #$s on ${Thread.currentThread().name}")
+//        Thread.sleep(3000)
+
         delay(3000)
         Timber.d("test1 Returning #$s on ${Thread.currentThread().name}")
 
